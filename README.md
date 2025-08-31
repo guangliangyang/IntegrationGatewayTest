@@ -88,10 +88,7 @@ IntegrationGateway/
 When scaling to enterprise production environments, consider these Azure services:
 
 - **API Management**: Centralized API gateway with throttling, caching, analytics
-- **Redis Cache**: Distributed caching for multi-instance scenarios
-- **Azure Front Door**: Global load balancing and CDN capabilities
-- **Azure Functions**: Serverless event processing for asynchronous workflows
-- **Service Bus**: Enterprise messaging for event-driven architecture
+- **Redis Cache**: Distributed caching for multi-instance scenarios 
 - **Container Apps**: Microservices deployment with auto-scaling
  
 
