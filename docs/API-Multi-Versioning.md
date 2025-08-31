@@ -6,11 +6,12 @@ This document explains the technical approach for implementing API multi-version
 
 ## API Specifications and Endpoints 
 
-The OpenAPI specification for Version 1 of the API is available at the following endpoint:
+The OpenAPI specifications and related documentation are available at the following locations:
 
-  * **Endpoint:** `https://localhost:7000/swagger`
-  * **Specification Version 1.0 (V1) :** [swagger-v1.json](swagger-v1.json) 
-  * **Specification Version 2.0 (V2) :** [swagger-v2.json](swagger-v2.json)
+  * **Swagger UI Endpoint:** `https://localhost:7000/swagger`
+  * **OpenAPI V1 Specification:** [swagger-v1.json](swagger-v1.json) 
+  * **OpenAPI V2 Specification:** [swagger-v2.json](swagger-v2.json)
+  * **API Changelog:** [Version differences and migration guide](API-Changelog.md)
 
 ## Architecture Philosophy
 
