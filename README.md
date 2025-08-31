@@ -70,8 +70,8 @@ IntegrationGateway/
 
 ## API Endpoints Preview
 
-- **V1**: `/api/v1/products` - Core product operations
-- **V2**: `/api/v2/products` - Enhanced with additional fields + batch operations  
+- **V1**: `/api/v1/products` - Core product operations [swagger-v1.json](docs/swagger-v1.json) 
+- **V2**: `/api/v2/products` - Enhanced with additional fields + batch operations  [swagger-v2.json](docs/swagger-v2.json) 
 - **Swagger UI**: `https://localhost:7000/swagger`
 
 ## Production Considerations
