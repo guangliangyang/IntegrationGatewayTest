@@ -1,7 +1,12 @@
+using IntegrationGateway.Models.Exceptions;
+
 namespace IntegrationGateway.Services.Exceptions;
 
-public class IdempotencyConflictException : Exception
+public class IdempotencyConflictException : BaseApplicationException
 {
+    public override int StatusCode => 409;
+    public override string ErrorType => "idempotency_conflict";
+    
     public string IdempotencyKey { get; }
     public string Operation { get; }
     public string ExpectedBodyHash { get; }

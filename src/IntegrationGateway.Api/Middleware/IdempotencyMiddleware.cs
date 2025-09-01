@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Options;
 using IntegrationGateway.Api.Configuration.Middleware;
 using IntegrationGateway.Models.Common;
+using IntegrationGateway.Models.Exceptions;
 using IntegrationGateway.Services.Interfaces;
 using IntegrationGateway.Services.Exceptions;
 
@@ -44,9 +45,7 @@ public class IdempotencyMiddleware
         if (!context.Request.Headers.TryGetValue("Idempotency-Key", out var idempotencyKeyValues) ||
             string.IsNullOrWhiteSpace(idempotencyKeyValues.FirstOrDefault()))
         {
-            await WriteErrorResponse(context, 400, "missing_idempotency_key", 
-                "Idempotency-Key header is required for POST and PUT requests");
-            return;
+            throw new MissingIdempotencyKeyException();
         }
 
         var idempotencyKey = idempotencyKeyValues.First()!;
@@ -54,9 +53,7 @@ public class IdempotencyMiddleware
         // Validate idempotency key format
         if (idempotencyKey.Length < 16 || idempotencyKey.Length > 128)
         {
-            await WriteErrorResponse(context, 400, "invalid_idempotency_key",
-                "Idempotency-Key header must be between 16 and 128 characters");
-            return;
+            throw new InvalidIdempotencyKeyException(idempotencyKey);
         }
 
         try
@@ -92,9 +89,7 @@ public class IdempotencyMiddleware
                 _logger.LogInformation("Concurrent request detected, returning 409 Conflict: {Key}", 
                     idempotencyKey);
                 
-                await WriteErrorResponse(context, 409, "concurrent_request",
-                    "A request with the same idempotency key is currently being processed");
-                return;
+                throw new ConflictException("A request with the same idempotency key is currently being processed");
             }
 
             // Reset request body position for downstream processing
@@ -142,11 +137,8 @@ public class IdempotencyMiddleware
                 "Expected BodyHash: {ExpectedHash}, Actual BodyHash: {ActualHash}", 
                 ex.IdempotencyKey, ex.Operation, ex.ExpectedBodyHash, ex.ActualBodyHash);
             
-            if (!context.Response.HasStarted)
-            {
-                await WriteErrorResponse(context, 400, "idempotency_conflict", 
-                    "The same idempotency key cannot be used for different request bodies");
-            }
+            // Re-throw to GlobalExceptionHandlingMiddleware for consistent error handling
+            throw;
         }
         catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
         {
@@ -170,33 +162,4 @@ public class IdempotencyMiddleware
         return body;
     }
 
-    private static async Task WriteErrorResponse(HttpContext context, int statusCode, string errorType, string message)
-    {
-        context.Response.StatusCode = statusCode;
-        context.Response.ContentType = "application/json";
-        
-        var errorResponse = new
-        {
-            type = errorType,
-            title = GetStatusTitle(statusCode),
-            detail = message,
-            status = statusCode,
-            traceId = context.TraceIdentifier
-        };
-
-        var jsonResponse = JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-
-        await context.Response.WriteAsync(jsonResponse);
-    }
-
-    private static string GetStatusTitle(int statusCode) => statusCode switch
-    {
-        400 => "Bad Request",
-        409 => "Conflict", 
-        500 => "Internal Server Error",
-        _ => "Error"
-    };
 }

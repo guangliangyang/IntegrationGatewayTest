@@ -31,7 +31,7 @@ public class ProductsController : V1.ProductsController
     /// <returns>Paginated list of products with enhanced fields</returns>
     [HttpGet]
     [ProducesResponseType(typeof(ProductListV2Response), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public override async Task<ActionResult<ProductListResponse>> GetProducts(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
@@ -50,8 +50,8 @@ public class ProductsController : V1.ProductsController
     /// <returns>Product details with enhanced fields</returns>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ProductV2Dto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public override async Task<ActionResult<ProductDto>> GetProduct(
         string id,
         CancellationToken cancellationToken = default)

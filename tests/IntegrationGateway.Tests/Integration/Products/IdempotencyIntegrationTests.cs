@@ -161,7 +161,7 @@ public class IdempotencyIntegrationTests : IntegrationTestBase
 
         // Assert
         response1.StatusCode.Should().Be(HttpStatusCode.Created);
-        response2.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response2.StatusCode.Should().Be(HttpStatusCode.Conflict); // IdempotencyConflictException returns 409
 
         // Verify conflict response structure
         var errorResponse = await DeserializeResponse<object>(response2);
@@ -254,7 +254,7 @@ public class IdempotencyIntegrationTests : IntegrationTestBase
 
         // Verify error response contains missing idempotency key information
         var responseContent = await response.Content.ReadAsStringAsync();
-        responseContent.Should().Contain("missing_idempotency_key");
+        responseContent.Should().Contain("missing_idempotency_key"); // Special handling for idempotency ArgumentException
         responseContent.Should().Contain("Idempotency-Key header is required for POST and PUT requests");
     }
 
@@ -281,7 +281,7 @@ public class IdempotencyIntegrationTests : IntegrationTestBase
 
         // Verify error response contains invalid idempotency key information
         var responseContent = await response.Content.ReadAsStringAsync();
-        responseContent.Should().Contain("invalid_idempotency_key");
+        responseContent.Should().Contain("invalid_idempotency_key"); // Special handling for idempotency ArgumentException
         responseContent.Should().Contain("must be between 16 and 128 characters");
     }
 }

@@ -29,7 +29,7 @@ public class ProductsController : ControllerBase
     /// <returns>Paginated list of products with stock information</returns>
     [HttpGet]
     [ProducesResponseType(typeof(ProductListResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public virtual async Task<ActionResult<ProductListResponse>> GetProducts(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
@@ -48,8 +48,8 @@ public class ProductsController : ControllerBase
     /// <returns>Product details with stock information</returns>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public virtual async Task<ActionResult<ProductDto>> GetProduct(
         string id,
         CancellationToken cancellationToken = default)
@@ -69,12 +69,17 @@ public class ProductsController : ControllerBase
     /// <param name="request">Product creation request</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Created product</returns>
+    /// <remarks>
+    /// Requires Idempotency-Key header (16-128 characters).
+    /// Returns 409 Conflict if same key used with different request body.
+    /// </remarks>
     [HttpPost]
     [Authorize]
     [ProducesResponseType(typeof(ProductDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public virtual async Task<ActionResult<ProductDto>> CreateProduct(
         [FromBody] CreateProductRequest request,
         CancellationToken cancellationToken = default)
@@ -99,13 +104,18 @@ public class ProductsController : ControllerBase
     /// <param name="request">Product update request</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Updated product</returns>
+    /// <remarks>
+    /// Requires Idempotency-Key header (16-128 characters).
+    /// Returns 409 Conflict if same key used with different request body.
+    /// </remarks>
     [HttpPut("{id}")]
     [Authorize]
     [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public virtual async Task<ActionResult<ProductDto>> UpdateProduct(
         string id,
         [FromBody] UpdateProductRequest request,
@@ -134,9 +144,9 @@ public class ProductsController : ControllerBase
     [HttpDelete("{id}")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public virtual async Task<IActionResult> DeleteProduct(
         string id,
         CancellationToken cancellationToken = default)
