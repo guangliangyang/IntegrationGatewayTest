@@ -38,6 +38,7 @@ public class ValidationException : BaseApplicationException
     {
         Errors = errors;
     }
+
 }
 
 /// <summary>

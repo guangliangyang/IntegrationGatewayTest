@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using IntegrationGateway.Models.Exceptions;
-using IntegrationGateway.Services.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IntegrationGateway.Api.Middleware;

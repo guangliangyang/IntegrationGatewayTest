@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
 using IntegrationGateway.Models.Exceptions;
-using IntegrationGateway.Services.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IntegrationGateway.Api.Middleware;

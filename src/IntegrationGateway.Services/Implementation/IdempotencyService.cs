@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using IntegrationGateway.Models.Common;
+using IntegrationGateway.Models.Exceptions;
 using IntegrationGateway.Services.Interfaces;
-using IntegrationGateway.Services.Exceptions;
 
 namespace IntegrationGateway.Services.Implementation;
 

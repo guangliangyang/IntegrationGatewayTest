@@ -1,7 +1,8 @@
-using IntegrationGateway.Models.Exceptions;
+namespace IntegrationGateway.Models.Exceptions;
 
-namespace IntegrationGateway.Services.Exceptions;
-
+/// <summary>
+/// Exception thrown when an idempotency key is used with different request bodies
+/// </summary>
 public class IdempotencyConflictException : BaseApplicationException
 {
     public override int StatusCode => 409;

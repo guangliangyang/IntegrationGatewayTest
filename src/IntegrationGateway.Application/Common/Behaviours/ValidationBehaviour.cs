@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using IntegrationGateway.Models.Exceptions;
 
 namespace IntegrationGateway.Application.Common.Behaviours;
 
@@ -32,7 +33,11 @@ public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TReque
 
             if (failures.Any())
             {
-                throw new ValidationException(failures);
+                var errors = failures
+                    .GroupBy(e => e.PropertyName, e => e.ErrorMessage)
+                    .ToDictionary(failureGroup => failureGroup.Key, failureGroup => failureGroup.ToArray());
+                
+                throw new IntegrationGateway.Models.Exceptions.ValidationException(errors);
             }
         }
 
@@ -40,23 +45,3 @@ public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TReque
     }
 }
 
-/// <summary>
-/// Custom validation exception with detailed error information
-/// </summary>
-public class ValidationException : Exception
-{
-    public ValidationException() : base("One or more validation failures have occurred.")
-    {
-        Errors = new Dictionary<string, string[]>();
-    }
-
-    public ValidationException(IEnumerable<FluentValidation.Results.ValidationFailure> failures)
-        : this()
-    {
-        Errors = failures
-            .GroupBy(e => e.PropertyName, e => e.ErrorMessage)
-            .ToDictionary(failureGroup => failureGroup.Key, failureGroup => failureGroup.ToArray());
-    }
-
-    public IDictionary<string, string[]> Errors { get; }
-}

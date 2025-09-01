@@ -5,7 +5,6 @@ using IntegrationGateway.Api.Configuration.Middleware;
 using IntegrationGateway.Models.Common;
 using IntegrationGateway.Models.Exceptions;
 using IntegrationGateway.Services.Interfaces;
-using IntegrationGateway.Services.Exceptions;
 
 namespace IntegrationGateway.Api.Middleware;
 
