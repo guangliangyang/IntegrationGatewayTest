@@ -1,0 +1,47 @@
+{
+  "testSettings": {
+    "baseUrl": "https://localhost:7000",
+    "testDuration": "00:05:00",
+    "reportOutputPath": "./Reports",
+    "enableDetailedReports": true,
+    "enableHtmlReport": true,
+    "enableCsvReport": true
+  },
+  "apiEndpoints": {
+    "products": {
+      "list": "/api/v1/products",
+      "getById": "/api/v1/products/{id}",
+      "create": "/api/v1/products",
+      "update": "/api/v1/products/{id}",
+      "delete": "/api/v1/products/{id}"
+    },
+    "productsV2": {
+      "list": "/api/v2/products",
+      "getById": "/api/v2/products/{id}",
+      "create": "/api/v2/products",
+      "update": "/api/v2/products/{id}",
+      "delete": "/api/v2/products/{id}"
+    }
+  },
+  "testData": {
+    "sampleProductIds": [
+      "product-001",
+      "product-002", 
+      "product-003",
+      "product-004",
+      "product-005"
+    ],
+    "createProductTemplate": {
+      "name": "Performance Test Product {0}",
+      "description": "Product created during performance testing",
+      "price": 99.99,
+      "category": "Testing",
+      "isActive": true
+    }
+  },
+  "authentication": {
+    "enableAuth": false,
+    "bearerToken": "",
+    "subscriptionKey": ""
+  }
+}

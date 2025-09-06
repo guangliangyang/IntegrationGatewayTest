@@ -1,0 +1,57 @@
+{
+  "apiManagement": {
+    "environments": {
+      "dev": {
+        "apimName": "apim-integration-gateway-dev",
+        "resourceGroup": "rg-integration-gateway-dev",
+        "subscription": "your-dev-subscription-id",
+        "backendUrl": "https://localhost:7000",
+        "sku": "Developer"
+      },
+      "staging": {
+        "apimName": "apim-integration-gateway-staging",
+        "resourceGroup": "rg-integration-gateway-staging",
+        "subscription": "your-staging-subscription-id",
+        "backendUrl": "https://integration-gateway-staging.azurewebsites.net",
+        "sku": "Standard"
+      },
+      "prod": {
+        "apimName": "apim-integration-gateway-prod",
+        "resourceGroup": "rg-integration-gateway-prod",
+        "subscription": "your-prod-subscription-id",
+        "backendUrl": "https://integration-gateway-prod.azurewebsites.net",
+        "sku": "Premium"
+      }
+    },
+    "policies": {
+      "rateLimiting": {
+        "callsPerHour": 1000,
+        "callsPerHourPerIp": 500,
+        "dailyQuota": 10000
+      },
+      "caching": {
+        "getProductsDuration": 300,
+        "getProductDuration": 600,
+        "notFoundDuration": 60
+      },
+      "security": {
+        "enableJwtValidation": true,
+        "enableSubscriptionKey": true,
+        "maxRequestSizeBytes": 1048576,
+        "enableCors": true
+      },
+      "circuitBreaker": {
+        "failureThreshold": 5,
+        "recoveryTimeout": "PT1M",
+        "retryCount": 3,
+        "retryInterval": "PT1S"
+      }
+    },
+    "monitoring": {
+      "enableApplicationInsights": true,
+      "logLevel": "Information",
+      "enableMetrics": true,
+      "retentionDays": 90
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "loadProfiles": {
+    "smoke": {
+      "name": "Smoke Test",
+      "description": "Basic smoke test with minimal load",
+      "concurrency": 1,
+      "duration": "00:01:00",
+      "scenarios": ["get_products", "get_product_by_id"]
+    },
+    "light": {
+      "name": "Light Load",
+      "description": "Light load test with 10 concurrent users",
+      "concurrency": 10,
+      "duration": "00:05:00",
+      "scenarios": ["get_products", "get_product_by_id", "create_product"]
+    },
+    "medium": {
+      "name": "Medium Load", 
+      "description": "Medium load test with 50 concurrent users",
+      "concurrency": 50,
+      "duration": "00:10:00",
+      "scenarios": ["get_products", "get_product_by_id", "create_product", "update_product"]
+    },
+    "heavy": {
+      "name": "Heavy Load",
+      "description": "Heavy load test with 100 concurrent users", 
+      "concurrency": 100,
+      "duration": "00:15:00",
+      "scenarios": ["get_products", "get_product_by_id", "create_product", "update_product"]
+    },
+    "stress": {
+      "name": "Stress Test",
+      "description": "Stress test to find system limits",
+      "concurrency": 200,
+      "duration": "00:20:00",
+      "scenarios": ["get_products", "get_product_by_id", "create_product", "update_product"]
+    },
+    "cache_test": {
+      "name": "Cache Performance",
+      "description": "Test caching effectiveness with repeated requests",
+      "concurrency": 20,
+      "duration": "00:10:00",
+      "scenarios": ["get_products_cached", "get_product_by_id_cached"]
+    },
+    "mixed_workload": {
+      "name": "Mixed Workload", 
+      "description": "Realistic mixed read/write workload (80% read, 20% write)",
+      "concurrency": 75,
+      "duration": "00:15:00",
+      "scenarios": [
+        {"name": "get_products", "weight": 40},
+        {"name": "get_product_by_id", "weight": 40}, 
+        {"name": "create_product", "weight": 10},
+        {"name": "update_product", "weight": 10}
+      ]
+    }
+  },
+  "rampUpProfiles": {
+    "gradual": {
+      "name": "Gradual Ramp Up",
+      "description": "Gradually increase load over time",
+      "steps": [
+        {"concurrency": 10, "duration": "00:02:00"},
+        {"concurrency": 25, "duration": "00:03:00"},
+        {"concurrency": 50, "duration": "00:05:00"},
+        {"concurrency": 100, "duration": "00:10:00"}
+      ]
+    },
+    "spike": {
+      "name": "Spike Test",
+      "description": "Sudden spike in load",
+      "steps": [
+        {"concurrency": 10, "duration": "00:02:00"},
+        {"concurrency": 200, "duration": "00:01:00"},
+        {"concurrency": 10, "duration": "00:02:00"}
+      ]
+    }
+  }
+}

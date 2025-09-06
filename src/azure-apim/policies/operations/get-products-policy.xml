@@ -1,0 +1,114 @@
+<policies>
+    <inbound>
+        <!-- Input validation for pagination parameters -->
+        <set-variable name="page" value="@(context.Request.Url.Query.GetValueOrDefault("page", "1"))" />
+        <set-variable name="pageSize" value="@(context.Request.Url.Query.GetValueOrDefault("pageSize", "50"))" />
+        
+        <choose>
+            <when condition="@(!int.TryParse((string)context.Variables["page"], out int pageValue) || pageValue < 1)">
+                <return-response>
+                    <set-status code="400" reason="Bad Request" />
+                    <set-header name="Content-Type" exists-action="override">
+                        <value>application/json</value>
+                    </set-header>
+                    <set-body>@{
+                        return new JObject(
+                            new JProperty("error", new JObject(
+                                new JProperty("code", "InvalidParameter"),
+                                new JProperty("message", "Page parameter must be a positive integer"),
+                                new JProperty("parameter", "page"),
+                                new JProperty("traceId", context.RequestId)
+                            ))
+                        ).ToString();
+                    }</set-body>
+                </return-response>
+            </when>
+            <when condition="@(!int.TryParse((string)context.Variables["pageSize"], out int sizeValue) || sizeValue < 1 || sizeValue > 1000)">
+                <return-response>
+                    <set-status code="400" reason="Bad Request" />
+                    <set-header name="Content-Type" exists-action="override">
+                        <value>application/json</value>
+                    </set-header>
+                    <set-body>@{
+                        return new JObject(
+                            new JProperty("error", new JObject(
+                                new JProperty("code", "InvalidParameter"),
+                                new JProperty("message", "PageSize parameter must be between 1 and 1000"),
+                                new JProperty("parameter", "pageSize"),
+                                new JProperty("traceId", context.RequestId)
+                            ))
+                        ).ToString();
+                    }</set-body>
+                </return-response>
+            </when>
+        </choose>
+        
+        <!-- Check cache first -->
+        <cache-lookup vary-by-developer="false" 
+                      vary-by-developer-groups="false" 
+                      downstream-caching-type="none">
+            <vary-by-header>Accept</vary-by-header>
+            <vary-by-query-parameter>page</vary-by-query-parameter>
+            <vary-by-query-parameter>pageSize</vary-by-query-parameter>
+        </cache-lookup>
+        
+        <!-- Set backend URL with route template -->
+        <set-backend-service base-url="@((string)context.Variables["backend-url"])" />
+        
+        <base />
+    </inbound>
+    
+    <backend>
+        <base />
+    </backend>
+    
+    <outbound>
+        <!-- Cache successful responses for 5 minutes -->
+        <choose>
+            <when condition="@(context.Response.StatusCode == 200)">
+                <cache-store duration="300" />
+                
+                <!-- Add cache headers -->
+                <set-header name="Cache-Control" exists-action="override">
+                    <value>public, max-age=300</value>
+                </set-header>
+                <set-header name="X-Cache-Status" exists-action="override">
+                    <value>MISS</value>
+                </set-header>
+            </when>
+            <otherwise>
+                <!-- Don't cache error responses -->
+                <set-header name="Cache-Control" exists-action="override">
+                    <value>no-cache, no-store, must-revalidate</value>
+                </set-header>
+            </otherwise>
+        </choose>
+        
+        <!-- Add pagination metadata to headers -->
+        <choose>
+            <when condition="@(context.Response.StatusCode == 200 && context.Response.Body != null)">
+                <set-variable name="responseBody" value="@(context.Response.Body.As<JObject>(preserveContent: true))" />
+                <set-header name="X-Total-Count" exists-action="override">
+                    <value>@(((JObject)context.Variables["responseBody"])["total"]?.ToString() ?? "0")</value>
+                </set-header>
+                <set-header name="X-Current-Page" exists-action="override">
+                    <value>@(context.Variables["page"])</value>
+                </set-header>
+                <set-header name="X-Page-Size" exists-action="override">
+                    <value>@(context.Variables["pageSize"])</value>
+                </set-header>
+            </when>
+        </choose>
+        
+        <base />
+    </outbound>
+    
+    <on-error>
+        <!-- Don't cache error responses -->
+        <set-header name="Cache-Control" exists-action="override">
+            <value>no-cache, no-store, must-revalidate</value>
+        </set-header>
+        
+        <base />
+    </on-error>
+</policies>

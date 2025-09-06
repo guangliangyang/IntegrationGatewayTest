@@ -1,0 +1,139 @@
+<policies>
+    <inbound>
+        <!-- Rate limiting per subscription -->
+        <rate-limit-by-key calls="1000" 
+                          renewal-period="3600" 
+                          counter-key="@(context.Subscription.Id)" 
+                          increment-condition="@(context.Response.StatusCode >= 200 && context.Response.StatusCode < 400)" />
+        
+        <!-- Rate limiting per client IP for additional protection -->
+        <rate-limit-by-key calls="500" 
+                          renewal-period="3600" 
+                          counter-key="@(context.Request.IpAddress)" />
+        
+        <!-- Quota limiting per subscription (daily) -->
+        <quota-by-key calls="10000" 
+                      renewal-period="86400" 
+                      counter-key="@(context.Subscription.Id)" />
+        
+        <!-- JWT Authentication -->
+        <validate-jwt header-name="Authorization" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized. Access token is missing or invalid.">
+            <openid-config url="https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration" />
+            <required-claims>
+                <claim name="aud">
+                    <value>api://integration-gateway</value>
+                </claim>
+            </required-claims>
+        </validate-jwt>
+        
+        <!-- Subscription key validation -->
+        <validate-subscription-key />
+        
+        <!-- Request size limiting -->
+        <set-variable name="maxRequestSize" value="1048576" /> <!-- 1MB -->
+        <choose>
+            <when condition="@(context.Request.Body != null && context.Request.Body.ToString().Length > int.Parse((string)context.Variables["maxRequestSize"]))">
+                <return-response>
+                    <set-status code="413" reason="Request Entity Too Large" />
+                    <set-header name="Content-Type" exists-action="override">
+                        <value>application/json</value>
+                    </set-header>
+                    <set-body>@{
+                        return new JObject(
+                            new JProperty("error", new JObject(
+                                new JProperty("code", "RequestTooLarge"),
+                                new JProperty("message", "Request body size exceeds the maximum allowed limit of 1MB"),
+                                new JProperty("traceId", context.RequestId)
+                            ))
+                        ).ToString();
+                    }</set-body>
+                </return-response>
+            </when>
+        </choose>
+        
+        <!-- Add user context to backend -->
+        <set-header name="X-User-Id" exists-action="override">
+            <value>@(context.Request.Headers.GetValueOrDefault("Authorization","").AsJwt()?.Claims?.GetValueOrDefault("sub", "anonymous"))</value>
+        </set-header>
+        
+        <!-- Circuit breaker pattern -->
+        <retry condition="@(context.Response.StatusCode >= 500)" count="3" interval="1" max-interval="10" delta="1">
+            <base />
+        </retry>
+        
+        <base />
+    </inbound>
+    
+    <backend>
+        <!-- Backend timeout and retry policy -->
+        <forward-request timeout="30" />
+    </backend>
+    
+    <outbound>
+        <!-- Response caching for GET requests -->
+        <choose>
+            <when condition="@(context.Request.Method == "GET" && context.Response.StatusCode == 200)">
+                <cache-store duration="300" /> <!-- 5 minutes cache -->
+            </when>
+        </choose>
+        
+        <!-- Add performance metrics -->
+        <set-header name="X-Gateway-Time" exists-action="override">
+            <value>@(context.Elapsed.TotalMilliseconds.ToString())</value>
+        </set-header>
+        
+        <!-- Remove internal headers -->
+        <set-header name="X-AspNet-Version" exists-action="delete" />
+        <set-header name="X-SourceFiles" exists-action="delete" />
+        
+        <base />
+    </outbound>
+    
+    <on-error>
+        <!-- Product-specific error handling -->
+        <choose>
+            <when condition="@(context.LastError.Source == "validate-jwt")">
+                <return-response>
+                    <set-status code="401" reason="Unauthorized" />
+                    <set-header name="Content-Type" exists-action="override">
+                        <value>application/json</value>
+                    </set-header>
+                    <set-body>@{
+                        return new JObject(
+                            new JProperty("error", new JObject(
+                                new JProperty("code", "Unauthorized"),
+                                new JProperty("message", "Access token is missing, invalid, or expired"),
+                                new JProperty("traceId", context.RequestId),
+                                new JProperty("timestamp", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"))
+                            ))
+                        ).ToString();
+                    }</set-body>
+                </return-response>
+            </when>
+            <when condition="@(context.LastError.Source == "rate-limit-by-key" || context.LastError.Source == "quota-by-key")">
+                <return-response>
+                    <set-status code="429" reason="Too Many Requests" />
+                    <set-header name="Content-Type" exists-action="override">
+                        <value>application/json</value>
+                    </set-header>
+                    <set-header name="Retry-After" exists-action="override">
+                        <value>3600</value>
+                    </set-header>
+                    <set-body>@{
+                        return new JObject(
+                            new JProperty("error", new JObject(
+                                new JProperty("code", "TooManyRequests"),
+                                new JProperty("message", "Request rate limit exceeded. Please try again later."),
+                                new JProperty("retryAfter", "3600"),
+                                new JProperty("traceId", context.RequestId),
+                                new JProperty("timestamp", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"))
+                            ))
+                        ).ToString();
+                    }</set-body>
+                </return-response>
+            </when>
+        </choose>
+        
+        <base />
+    </on-error>
+</policies>
