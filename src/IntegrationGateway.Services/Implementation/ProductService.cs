@@ -162,6 +162,49 @@ public class ProductService : IProductService
         return MapToProductDto(createdProduct, null);
     }
 
+    public async Task<ProductV2Dto> CreateProductV2Async(CreateProductRequest request, CancellationToken cancellationToken = default)
+    {
+        if (request == null)
+            throw new ValidationException("Request cannot be null");
+            
+        _logger.LogDebug("Creating product V2: {Name}", request.Name);
+
+        var createRequest = new ErpProductRequest
+        {
+            Name = request.Name,
+            Description = request.Description,
+            Price = request.Price,
+            Category = request.Category,
+            IsActive = request.IsActive
+        };
+
+        var erpResponse = await _erpService.CreateProductAsync(createRequest, cancellationToken);
+        if (!erpResponse.Success)
+        {
+            throw new ExternalServiceException("ERP", $"Service error: {erpResponse.ErrorMessage}");
+        }
+        
+        if (erpResponse.Data == null)
+        {
+            throw new ExternalServiceException("ERP", "ERP returned success but null product data");
+        }
+
+        var createdProduct = erpResponse.Data;
+        _logger.LogDebug("Created product {ProductId} in ERP", createdProduct.Id);
+        
+        // Get stock information for V2 response
+        var stockTask = _warehouseService.GetBulkStockAsync(new List<string> { createdProduct.Id }, cancellationToken);
+        var stockResponse = await stockTask;
+        
+        WarehouseStock? stock = null;
+        if (stockResponse.Success && stockResponse.Data?.Stocks?.Any() == true)
+        {
+            stock = stockResponse.Data.Stocks.FirstOrDefault();
+        }
+        
+        return MapToProductV2Dto(createdProduct, stock);
+    }
+
     public async Task<ProductDto> UpdateProductAsync(string productId, UpdateProductRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(productId))
@@ -200,6 +243,55 @@ public class ProductService : IProductService
 
         var stock = await GetWarehouseStockAsync(productId, cancellationToken);
         return MapToProductDto(updatedProduct, stock);
+    }
+
+    public async Task<ProductV2Dto> UpdateProductV2Async(string productId, UpdateProductRequest request, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(productId))
+            throw new ValidationException("Product ID cannot be null or empty");
+        if (request == null)
+            throw new ValidationException("Request cannot be null");
+            
+        _logger.LogDebug("Updating product V2: {ProductId}", productId);
+
+        var updateRequest = new ErpProductRequest
+        {
+            Name = request.Name ?? string.Empty,
+            Description = request.Description,
+            Price = request.Price ?? 0,
+            Category = request.Category ?? string.Empty,
+            IsActive = request.IsActive ?? true
+        };
+
+        var erpResponse = await _erpService.UpdateProductAsync(productId, updateRequest, cancellationToken);
+        if (!erpResponse.Success)
+        {
+            if (erpResponse.ErrorMessage?.Contains("not found", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                throw new NotFoundException("Product", productId);
+            }
+            throw new ExternalServiceException("ERP", $"Failed to update product: {erpResponse.ErrorMessage}");
+        }
+        
+        if (erpResponse.Data == null)
+        {
+            throw new ExternalServiceException("ERP", "ERP returned success but null product data");
+        }
+
+        var updatedProduct = erpResponse.Data;
+        _logger.LogDebug("Updated product V2 {ProductId} in ERP", productId);
+
+        // Get stock information for V2 response
+        var stockTask = _warehouseService.GetBulkStockAsync(new List<string> { productId }, cancellationToken);
+        var stockResponse = await stockTask;
+        
+        WarehouseStock? stock = null;
+        if (stockResponse.Success && stockResponse.Data?.Stocks?.Any() == true)
+        {
+            stock = stockResponse.Data.Stocks.FirstOrDefault();
+        }
+        
+        return MapToProductV2Dto(updatedProduct, stock);
     }
 
     public async Task<bool> DeleteProductAsync(string productId, CancellationToken cancellationToken = default)

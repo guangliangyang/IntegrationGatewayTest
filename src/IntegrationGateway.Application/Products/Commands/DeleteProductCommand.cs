@@ -10,7 +10,7 @@ namespace IntegrationGateway.Application.Products.Commands;
 /// <summary>
 /// Command to delete a product (soft delete)
 /// </summary>
-public record DeleteProductCommand : IRequest<bool>
+public record DeleteProductCommand : IRequest<Unit>
 {
     public required string Id { get; init; }
 
@@ -36,7 +36,7 @@ public class DeleteProductCommandValidator : AbstractValidator<DeleteProductComm
 /// <summary>
 /// Handler for DeleteProductCommand
 /// </summary>
-public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommand, bool>
+public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommand, Unit>
 {
     private readonly IProductService _productService;
     private readonly ICurrentUserService _currentUser;
@@ -52,22 +52,19 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommand,
         _logger = logger;
     }
 
-    public async Task<bool> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("User {UserId} deleting product: {ProductId}", 
             _currentUser.UserId ?? "Unknown", request.Id);
 
         var success = await _productService.DeleteProductAsync(request.Id, cancellationToken);
 
-        if (success)
+        if (!success)
         {
-            _logger.LogInformation("Deleted product: {ProductId}", request.Id);
-        }
-        else
-        {
-            _logger.LogWarning("Product not found for deletion: {ProductId}", request.Id);
+            throw new IntegrationGateway.Models.Exceptions.NotFoundException("Product", request.Id);
         }
 
-        return success;
+        _logger.LogInformation("Deleted product: {ProductId}", request.Id);
+        return Unit.Value;
     }
 }

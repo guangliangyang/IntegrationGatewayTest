@@ -59,9 +59,6 @@ public class ProductsController : V1.ProductsController
         var query = new GetProductV2Query(id);
         var product = await _mediator.Send(query, cancellationToken);
         
-        if (product == null)
-            return NotFound();
-
         return Ok(product);
     }
 
@@ -81,20 +78,18 @@ public class ProductsController : V1.ProductsController
         [FromBody] CreateProductRequest request,
         CancellationToken cancellationToken = default)
     {
-        var command = new CreateProductCommand
+        var command = new CreateProductV2Command
         {
             Name = request.Name,
-            Description = request.Description,
+            Description = request.Description ?? string.Empty,
             Price = request.Price,
             Category = request.Category,
             IsActive = request.IsActive
         };
         
-        var v1Product = await _mediator.Send(command, cancellationToken);
-        var v2Query = new GetProductV2Query(v1Product.Id);
-        var v2Product = await _mediator.Send(v2Query, cancellationToken);
+        var v2Product = await _mediator.Send(command, cancellationToken);
         
-        return CreatedAtAction(nameof(GetProduct), new { id = v1Product.Id }, v2Product);
+        return CreatedAtAction(nameof(GetProduct), new { id = v2Product.Id }, v2Product);
     }
 
     /// <summary>
@@ -116,19 +111,17 @@ public class ProductsController : V1.ProductsController
         [FromBody] UpdateProductRequest request,
         CancellationToken cancellationToken = default)
     {
-        var command = new UpdateProductCommand
+        var command = new UpdateProductV2Command
         {
             Id = id,
-            Name = request.Name,
-            Description = request.Description,
-            Price = request.Price,
-            Category = request.Category,
-            IsActive = request.IsActive
+            Name = request.Name ?? string.Empty,
+            Description = request.Description ?? string.Empty,
+            Price = request.Price ?? 0,
+            Category = request.Category ?? string.Empty,
+            IsActive = request.IsActive ?? true
         };
         
-        var v1Product = await _mediator.Send(command, cancellationToken);
-        var v2Query = new GetProductV2Query(id);
-        var v2Product = await _mediator.Send(v2Query, cancellationToken);
+        var v2Product = await _mediator.Send(command, cancellationToken);
         
         return Ok(v2Product);
     }
@@ -157,36 +150,23 @@ public class ProductsController : V1.ProductsController
 
         if (requests == null || !requests.Any())
         {
-            return BadRequest(new ErrorResponse
-            {
-                Type = "invalid_request",
-                Title = "Invalid Request",
-                Detail = "Request list cannot be empty",
-                Status = StatusCodes.Status400BadRequest,
-                TraceId = HttpContext.TraceIdentifier
-            });
+            throw new IntegrationGateway.Models.Exceptions.ValidationException("Request list cannot be empty");
         }
 
         var results = new List<ProductV2Dto>();
         for (int i = 0; i < requests.Count; i++)
         {
-            var command = new CreateProductCommand
+            var command = new CreateProductV2Command
             {
                 Name = requests[i].Name,
-                Description = requests[i].Description,
+                Description = requests[i].Description ?? string.Empty,
                 Price = requests[i].Price,
                 Category = requests[i].Category,
                 IsActive = requests[i].IsActive
             };
             
-            var v1Product = await _mediator.Send(command, cancellationToken);
-            var v2Query = new GetProductV2Query(v1Product.Id);
-            var v2Product = await _mediator.Send(v2Query, cancellationToken);
-            
-            if (v2Product != null)
-            {
-                results.Add(v2Product);
-            }
+            var v2Product = await _mediator.Send(command, cancellationToken);
+            results.Add(v2Product);
         }
         
         return Created("batch", results);

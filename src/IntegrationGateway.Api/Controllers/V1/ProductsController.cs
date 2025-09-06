@@ -57,9 +57,6 @@ public class ProductsController : ControllerBase
         var query = new GetProductQuery(id);
         var product = await _mediator.Send(query, cancellationToken);
         
-        if (product == null)
-            return NotFound();
-
         return Ok(product);
     }
 
@@ -152,11 +149,8 @@ public class ProductsController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         var command = new DeleteProductCommand { Id = id };
-        var success = await _mediator.Send(command, cancellationToken);
+        await _mediator.Send(command, cancellationToken);
         
-        if (!success)
-            return NotFound();
-
         return NoContent();
     }
 }

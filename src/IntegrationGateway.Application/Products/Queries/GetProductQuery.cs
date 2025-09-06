@@ -11,7 +11,7 @@ namespace IntegrationGateway.Application.Products.Queries;
 /// Query to get a single product by ID
 /// </summary>
 [Cacheable(5)] // Cache for 5 seconds
-public record GetProductQuery(string Id) : IRequest<ProductDto?>;
+public record GetProductQuery(string Id) : IRequest<ProductDto>;
 
 /// <summary>
 /// Validator for GetProductQuery
@@ -31,7 +31,7 @@ public class GetProductQueryValidator : AbstractValidator<GetProductQuery>
 /// <summary>
 /// Handler for GetProductQuery
 /// </summary>
-public class GetProductQueryHandler : IRequestHandler<GetProductQuery, ProductDto?>
+public class GetProductQueryHandler : IRequestHandler<GetProductQuery, ProductDto>
 {
     private readonly IProductService _productService;
     private readonly ILogger<GetProductQueryHandler> _logger;
@@ -42,7 +42,7 @@ public class GetProductQueryHandler : IRequestHandler<GetProductQuery, ProductDt
         _logger = logger;
     }
 
-    public async Task<ProductDto?> Handle(GetProductQuery request, CancellationToken cancellationToken)
+    public async Task<ProductDto> Handle(GetProductQuery request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Getting product: {ProductId}", request.Id);
 
@@ -50,8 +50,7 @@ public class GetProductQueryHandler : IRequestHandler<GetProductQuery, ProductDt
 
         if (product == null)
         {
-            _logger.LogWarning("Product not found: {ProductId}", request.Id);
-            return null;
+            throw new IntegrationGateway.Models.Exceptions.NotFoundException("Product", request.Id);
         }
 
         _logger.LogInformation("Retrieved product: {ProductId}", request.Id);

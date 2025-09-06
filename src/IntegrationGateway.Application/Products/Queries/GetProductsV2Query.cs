@@ -42,12 +42,12 @@ public class GetProductsV2QueryHandler : IRequestHandler<GetProductsV2Query, Pro
 /// Query to get a single product by ID with V2 enhanced information
 /// </summary>
 [Cacheable(5)] // Cache for 5 seconds
-public record GetProductV2Query(string Id) : IRequest<ProductV2Dto?>;
+public record GetProductV2Query(string Id) : IRequest<ProductV2Dto>;
 
 /// <summary>
 /// Handler for GetProductV2Query
 /// </summary>
-public class GetProductV2QueryHandler : IRequestHandler<GetProductV2Query, ProductV2Dto?>
+public class GetProductV2QueryHandler : IRequestHandler<GetProductV2Query, ProductV2Dto>
 {
     private readonly IProductService _productService;
     private readonly ILogger<GetProductV2QueryHandler> _logger;
@@ -58,7 +58,7 @@ public class GetProductV2QueryHandler : IRequestHandler<GetProductV2Query, Produ
         _logger = logger;
     }
 
-    public async Task<ProductV2Dto?> Handle(GetProductV2Query request, CancellationToken cancellationToken)
+    public async Task<ProductV2Dto> Handle(GetProductV2Query request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Getting product V2: {ProductId}", request.Id);
 
@@ -66,8 +66,7 @@ public class GetProductV2QueryHandler : IRequestHandler<GetProductV2Query, Produ
 
         if (product == null)
         {
-            _logger.LogWarning("Product V2 not found: {ProductId}", request.Id);
-            return null;
+            throw new IntegrationGateway.Models.Exceptions.NotFoundException("Product", request.Id);
         }
 
         _logger.LogInformation("Retrieved product V2: {ProductId}", request.Id);
