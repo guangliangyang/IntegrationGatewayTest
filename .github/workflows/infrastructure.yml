@@ -1,0 +1,198 @@
+name: Infrastructure Deployment
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/azure-apim/**'
+      - '.github/workflows/infrastructure.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/azure-apim/**'
+      - '.github/workflows/infrastructure.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+env:
+  AZURE_BICEP_VERSION: 'latest'
+  
+jobs:
+  validate:
+    name: Validate Infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bicep CLI
+        uses: Azure/bicep-build-action@v1
+        with:
+          bicepFilePath: src/azure-apim/bicep/main.bicep
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Validate Bicep templates
+        run: |
+          cd src/azure-apim/bicep
+          
+          # Validate main template
+          az bicep build --file main.bicep
+          
+          # What-if deployment
+          az deployment group what-if \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --template-file main.bicep \
+            --parameters @parameters/dev.bicepparam
+
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'dev'
+    environment: development
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Azure Resources
+        run: |
+          cd src/azure-apim/bicep
+          
+          az deployment group create \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --template-file main.bicep \
+            --parameters @parameters/dev.bicepparam \
+            --parameters \
+              environment=dev \
+              apiManagementServiceName=apim-integration-gateway-dev
+
+      - name: Deploy API Management Policies
+        run: |
+          cd src/azure-apim
+          
+          # Deploy global policies
+          az apim policy import \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --service-name apim-integration-gateway-dev \
+            --policy-file policies/global/global-policy.xml
+          
+          # Deploy API-specific policies
+          az apim api policy import \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --service-name apim-integration-gateway-dev \
+            --api-id integration-gateway \
+            --policy-file policies/products/integration-gateway-policy.xml
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: deploy-dev
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'staging'
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Azure Resources
+        run: |
+          cd src/azure-apim/bicep
+          
+          az deployment group create \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP_STAGING }} \
+            --template-file main.bicep \
+            --parameters @parameters/staging.bicepparam \
+            --parameters \
+              environment=staging \
+              apiManagementServiceName=apim-integration-gateway-staging
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'prod'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Azure Resources
+        run: |
+          cd src/azure-apim/bicep
+          
+          az deployment group create \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP_PROD }} \
+            --template-file main.bicep \
+            --parameters @parameters/prod.bicepparam \
+            --parameters \
+              environment=prod \
+              apiManagementServiceName=apim-integration-gateway-prod
+
+      - name: Run Infrastructure Tests
+        run: |
+          # Test API Management endpoints
+          curl -f "https://apim-integration-gateway-prod.azure-api.net/health" || exit 1
+          
+          # Test key APIs
+          curl -f "https://apim-integration-gateway-prod.azure-api.net/api/v1/products" \
+            -H "Ocp-Apim-Subscription-Key: ${{ secrets.APIM_SUBSCRIPTION_KEY }}" || exit 1
+
+  notify:
+    name: Notify Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-dev, deploy-staging, deploy-production]
+    if: always()
+    steps:
+      - name: Notify Teams
+        run: |
+          STATUS="✅ Success"
+          if [[ "${{ needs.deploy-dev.result }}" == "failure" || 
+                "${{ needs.deploy-staging.result }}" == "failure" || 
+                "${{ needs.deploy-production.result }}" == "failure" ]]; then
+            STATUS="❌ Failed"
+          fi
+          
+          curl -X POST ${{ secrets.TEAMS_WEBHOOK_URL }} \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"text\": \"${STATUS} Infrastructure Deployment\",
+              \"sections\": [{
+                \"activityTitle\": \"Infrastructure Deployment\",
+                \"activitySubtitle\": \"Environment: ${{ github.event.inputs.environment || 'all' }}\",
+                \"facts\": [
+                  {\"name\": \"Repository\", \"value\": \"${{ github.repository }}\"},
+                  {\"name\": \"Branch\", \"value\": \"${{ github.ref_name }}\"},
+                  {\"name\": \"Commit\", \"value\": \"${{ github.sha }}\"},
+                  {\"name\": \"Dev\", \"value\": \"${{ needs.deploy-dev.result }}\"},
+                  {\"name\": \"Staging\", \"value\": \"${{ needs.deploy-staging.result }}\"},
+                  {\"name\": \"Production\", \"value\": \"${{ needs.deploy-production.result }}\"}
+                ]
+              }]
+            }"
