@@ -1,9 +1,10 @@
 using NBomber.CSharp;
-using IntegrationGateway.PerformanceTests.Utils;
-using IntegrationGateway.PerformanceTests.Scenarios;
+using NBomber.Contracts;
+using Performance.Tests.Utils;
+using Performance.Tests.Scenarios;
 using Serilog;
 
-namespace IntegrationGateway.PerformanceTests;
+namespace Performance.Tests;
 
 class Program
 {
@@ -64,7 +65,7 @@ class Program
 
     private static void RunPerformanceTest(TestConfiguration config, string testMode)
     {
-        var scenarios = new List<ScenarioProps>();
+        var scenarios = new List<Scenario>();
         
         switch (testMode)
         {
@@ -121,7 +122,7 @@ class Program
         Console.WriteLine($"📊 Reports saved to: {config.TestSettings.ReportOutputPath}");
     }
 
-    private static IEnumerable<ScenarioProps> CreateSmokeTestScenarios(TestConfiguration config)
+    private static IEnumerable<Scenario> CreateSmokeTestScenarios(TestConfiguration config)
     {
         yield return BaseScenarios.CreateGetProductsScenario(config)
             .WithLoadSimulations(Simulation.InjectPerSec(rate: 1, during: TimeSpan.FromMinutes(1)));
@@ -130,7 +131,7 @@ class Program
             .WithLoadSimulations(Simulation.InjectPerSec(rate: 1, during: TimeSpan.FromMinutes(1)));
     }
 
-    private static IEnumerable<ScenarioProps> CreateLightLoadScenarios(TestConfiguration config)
+    private static IEnumerable<Scenario> CreateLightLoadScenarios(TestConfiguration config)
     {
         yield return BaseScenarios.CreateGetProductsScenario(config)
             .WithLoadSimulations(Simulation.KeepConstant(copies: 5, during: TimeSpan.FromMinutes(5)));
@@ -142,7 +143,7 @@ class Program
             .WithLoadSimulations(Simulation.KeepConstant(copies: 2, during: TimeSpan.FromMinutes(5)));
     }
 
-    private static IEnumerable<ScenarioProps> CreateMediumLoadScenarios(TestConfiguration config)
+    private static IEnumerable<Scenario> CreateMediumLoadScenarios(TestConfiguration config)
     {
         yield return BaseScenarios.CreateGetProductsScenario(config)
             .WithLoadSimulations(Simulation.KeepConstant(copies: 25, during: TimeSpan.FromMinutes(10)));
@@ -157,7 +158,7 @@ class Program
             .WithLoadSimulations(Simulation.KeepConstant(copies: 5, during: TimeSpan.FromMinutes(10)));
     }
 
-    private static IEnumerable<ScenarioProps> CreateHeavyLoadScenarios(TestConfiguration config)
+    private static IEnumerable<Scenario> CreateHeavyLoadScenarios(TestConfiguration config)
     {
         yield return BaseScenarios.CreateGetProductsScenario(config)
             .WithLoadSimulations(Simulation.KeepConstant(copies: 50, during: TimeSpan.FromMinutes(15)));
@@ -172,7 +173,7 @@ class Program
             .WithLoadSimulations(Simulation.KeepConstant(copies: 10, during: TimeSpan.FromMinutes(15)));
     }
 
-    private static IEnumerable<ScenarioProps> CreateStressTestScenarios(TestConfiguration config)
+    private static IEnumerable<Scenario> CreateStressTestScenarios(TestConfiguration config)
     {
         // 逐步增加负载的压力测试
         yield return BaseScenarios.CreateGetProductsScenario(config)
@@ -184,7 +185,7 @@ class Program
             );
     }
 
-    private static IEnumerable<ScenarioProps> CreateCacheTestScenarios(TestConfiguration config)
+    private static IEnumerable<Scenario> CreateCacheTestScenarios(TestConfiguration config)
     {
         yield return ProductsApiScenarios.CreateCacheTestScenario(config)
             .WithLoadSimulations(Simulation.KeepConstant(copies: 10, during: TimeSpan.FromMinutes(10)));
@@ -193,7 +194,7 @@ class Program
             .WithLoadSimulations(Simulation.KeepConstant(copies: 8, during: TimeSpan.FromMinutes(10)));
     }
 
-    private static IEnumerable<ScenarioProps> CreateMixedWorkloadScenarios(TestConfiguration config)
+    private static IEnumerable<Scenario> CreateMixedWorkloadScenarios(TestConfiguration config)
     {
         yield return ProductsApiScenarios.CreateMixedWorkloadScenario(config)
             .WithLoadSimulations(Simulation.KeepConstant(copies: 50, during: TimeSpan.FromMinutes(15)));

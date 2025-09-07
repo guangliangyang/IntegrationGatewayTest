@@ -2,7 +2,7 @@ using System.Text;
 using NBomber.Http;
 using Newtonsoft.Json;
 
-namespace IntegrationGateway.PerformanceTests.Utils;
+namespace Performance.Tests.Utils;
 
 public static class HttpClientExtensions
 {

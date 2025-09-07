@@ -14,7 +14,7 @@ using System.Text.Encodings.Web;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 
-namespace IntegrationGateway.Tests.Integration.Base;
+namespace Integration.Tests.Integration.Base;
 
 /// <summary>
 /// Base class for integration tests with WebApplicationFactory setup

@@ -1,9 +1,9 @@
 using System.Net;
 using FluentAssertions;
 using IntegrationGateway.Models.DTOs;
-using IntegrationGateway.Tests.Integration.Base;
+using Integration.Tests.Integration.Base;
 
-namespace IntegrationGateway.Tests.Integration.Products;
+namespace Integration.Tests.Integration.Products;
 
 /// <summary>
 /// Integration tests for idempotency handling in write operations

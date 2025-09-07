@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 
-namespace IntegrationGateway.PerformanceTests.Utils;
+namespace Performance.Tests.Utils;
 
 public class TestConfiguration
 {

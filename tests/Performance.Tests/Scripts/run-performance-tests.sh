@@ -127,8 +127,8 @@ main() {
     
     # 设置项目路径
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    PROJECT_PATH="$SCRIPT_DIR/../IntegrationGateway.PerformanceTests"
-    PROJECT_FILE="$PROJECT_PATH/IntegrationGateway.PerformanceTests.csproj"
+    PROJECT_PATH="$SCRIPT_DIR/../Performance.Tests"
+    PROJECT_FILE="$PROJECT_PATH/Performance.Tests.csproj"
     
     if [[ ! -f "$PROJECT_FILE" ]]; then
         print_error "Performance test project not found at: $PROJECT_FILE"

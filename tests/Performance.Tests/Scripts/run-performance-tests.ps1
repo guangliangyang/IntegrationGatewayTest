@@ -74,8 +74,8 @@ try {
     Write-Host "  🔨 Build First: $BuildFirst" -ForegroundColor White
     
     # 设置项目路径
-    $projectPath = Join-Path $PSScriptRoot "../IntegrationGateway.PerformanceTests"
-    $projectFile = Join-Path $projectPath "IntegrationGateway.PerformanceTests.csproj"
+    $projectPath = Join-Path $PSScriptRoot ".."
+    $projectFile = Join-Path $projectPath "Performance.Tests.csproj"
     
     if (!(Test-Path $projectFile)) {
         Write-Error "Performance test project not found at: $projectFile"

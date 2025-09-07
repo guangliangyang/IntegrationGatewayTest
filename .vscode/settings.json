@@ -1,0 +1,10 @@
+{
+    "dotnet.defaultSolution": "./IntegrationGateway.sln",
+    "dotnet.testProjectsToRunOnStart": [
+        "./tests/Integration.Tests/Integration.Tests.csproj"
+    ],
+    "csharp.enableDecompilationSupport": true,
+    "csharp.enableImportCompletion": true,
+    "omnisharp.useModernNet": true,
+    "dotnet.preferCSharpExtension": true
+}

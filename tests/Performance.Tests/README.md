@@ -5,8 +5,7 @@
 ## 🏗️ 测试架构
 
 ```
-performance-tests/
-├── IntegrationGateway.PerformanceTests/  # NBomber测试项目
+Performance.Tests/                       # NBomber性能测试项目
 │   ├── Scenarios/                        # 测试场景
 │   │   ├── BaseScenarios.cs             # 基础API测试场景
 │   │   └── ProductsApiScenarios.cs      # 产品API专项测试
@@ -89,7 +88,7 @@ dotnet run
 #### 手动运行
 
 ```bash
-cd performance-tests/IntegrationGateway.PerformanceTests
+cd tests/Performance.Tests
 dotnet run -- [test-mode]
 ```
 
@@ -220,7 +219,7 @@ dotnet run -- [test-mode]
 ```yaml
 - name: Run Performance Tests
   run: |
-    cd performance-tests
+    cd tests/Performance.Tests
     ./Scripts/run-performance-tests.sh smoke
     ./Scripts/run-performance-tests.sh light
 ```

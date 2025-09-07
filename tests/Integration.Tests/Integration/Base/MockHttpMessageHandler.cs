@@ -2,7 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 
-namespace IntegrationGateway.Tests.Integration.Base;
+namespace Integration.Tests.Integration.Base;
 
 /// <summary>
 /// Mock HTTP message handler for controlled HTTP responses in integration tests
