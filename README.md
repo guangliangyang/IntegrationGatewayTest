@@ -10,7 +10,7 @@
 - [Cross-Cutting Concerns Strategy](docs/Cross-Cutting-Concerns-Strategy.md)
 - [Framework & Technology Rationale](docs/Framework-Technology-Rationale.md)
 - [**Azure API Management Integration**](src/azure-apim/docs/README.md) 🆕
-- [**GitHub CI/CD Pipeline**](.github/README.md) 🆕
+- [**GitHub CI/CD Pipeline**](.github/CI-CD-GUIDE.md) 🆕
 
 ## Project Overview
 
@@ -164,3 +164,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 *This project demonstrates enterprise-grade integration patterns suitable for production Azure deployments with flexible API management options.*
+
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-blue?style=flat-square&logo=github-actions)](/.github/CI-CD-GUIDE.md)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=flat-square&logo=docker)](src/IntegrationGateway.Api/Dockerfile)
+[![Azure](https://img.shields.io/badge/Azure-Ready-blue?style=flat-square&logo=microsoft-azure)](src/azure-apim/docs/README.md)
