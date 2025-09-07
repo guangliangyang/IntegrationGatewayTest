@@ -452,3 +452,6 @@ $RECYCLE.BIN/
 
 
 .env
+
+# NBomber Performance Test Reports
+**/Reports/
