@@ -9,7 +9,8 @@
 - [Observability Debugging Guide](docs/Observability-Debugging-Guide.md)
 - [Cross-Cutting Concerns Strategy](docs/Cross-Cutting-Concerns-Strategy.md)
 - [Framework & Technology Rationale](docs/Framework-Technology-Rationale.md)
-- [**Azure API Management Integration**](azure-apim/docs/README.md) 🆕
+- [**Azure API Management Integration**](src/azure-apim/docs/README.md) 🆕
+- [**GitHub CI/CD Pipeline**](.github/README.md) 🆕
 
 ## Project Overview
 
@@ -51,7 +52,7 @@ Client → Azure API Management → Integration Gateway (.NET) → ERP/Warehouse
 - Rate limiting & caching
 - External partner integration
 
-See [Azure API Management Integration Guide](azure-apim/docs/README.md) for details.
+See [Azure API Management Integration Guide](src/azure-apim/docs/README.md) for details.
 
 ## Architecture Highlights
 
@@ -66,16 +67,20 @@ See [Azure API Management Integration Guide](azure-apim/docs/README.md) for deta
 
 ```
 IntegrationGateway/
+├── .github/                 # GitHub CI/CD pipeline configuration 🆕
+│   ├── workflows/          # GitHub Actions workflows
+│   ├── scripts/            # Deployment automation scripts
+│   └── ISSUE_TEMPLATE/     # Issue and PR templates
 ├── src/                     # Source code
 │   ├── IntegrationGateway.Api/      # Web API layer
 │   ├── IntegrationGateway.Application/  # CQRS handlers & behaviors  
 │   ├── IntegrationGateway.Models/       # DTOs and domain models
-│   └── IntegrationGateway.Services/     # Business services
-├── azure-apim/              # Azure API Management integration 🆕
-│   ├── bicep/              # Infrastructure as Code
-│   ├── policies/           # API Management policies
-│   ├── scripts/            # Deployment scripts
-│   └── docs/               # APIM documentation
+│   ├── IntegrationGateway.Services/     # Business services
+│   └── azure-apim/         # Azure API Management integration 🆕
+│       ├── bicep/          # Infrastructure as Code
+│       ├── policies/       # API Management policies
+│       ├── scripts/        # Deployment scripts
+│       └── docs/           # APIM documentation
 ├── stubs/                   # Mock services for development
 ├── tests/                   # Unit & integration tests
 └── docs/                    # Technical documentation
@@ -132,7 +137,7 @@ Choose your deployment strategy based on requirements:
 #### Option B: APIM + Integration Gateway (Recommended for External APIs)
 - **Pros**: Enterprise features, external partner support, advanced monitoring
 - **Use Cases**: Public APIs, partner integrations, complex rate limiting
-- **Deploy**: See [APIM Deployment Guide](azure-apim/docs/DEPLOYMENT-GUIDE.md)
+- **Deploy**: See [APIM Deployment Guide](src/azure-apim/docs/DEPLOYMENT-GUIDE.md)
 
 #### Additional Azure Services
 - **Redis Cache**: Distributed caching for multi-instance scenarios 
@@ -142,7 +147,7 @@ Choose your deployment strategy based on requirements:
 ## Getting Started with APIM 🆕
 
 1. **Deploy Integration Gateway**: Follow existing [Quick Start Guide](docs/Quick-Start-Guide.md)
-2. **Deploy APIM Layer**: Follow [APIM Deployment Guide](azure-apim/docs/DEPLOYMENT-GUIDE.md)
+2. **Deploy APIM Layer**: Follow [APIM Deployment Guide](src/azure-apim/docs/DEPLOYMENT-GUIDE.md)
 3. **Configure Policies**: Customize authentication, rate limiting, and caching
 4. **Test Integration**: Use provided test scripts and monitor through Azure portal
 
