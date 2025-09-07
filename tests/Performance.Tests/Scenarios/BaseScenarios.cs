@@ -1,5 +1,6 @@
 using NBomber.CSharp;
 using NBomber.Contracts;
+using NBomber.Http;
 using NBomber.Http.CSharp;
 using Performance.Tests.Utils;
 
@@ -13,19 +14,14 @@ public static class BaseScenarios
         
         return Scenario.Create(scenarioName, async context =>
         {
-            var step = await Step.Run("get_products", context, async () =>
-            {
-                var request = Http.CreateRequest("GET", 
-                    $"{config.TestSettings.BaseUrl}{config.ApiEndpoints.Products.List}?page=1&pageSize=20")
-                    .WithHeader("Accept", "application/json");
-                
-                request.AddAuthenticationHeaders(config.Authentication);
-                
-                var response = await Http.Send(httpClient, request);
-                return response;
-            });
+            var request = Http.CreateRequest("GET", 
+                $"{config.TestSettings.BaseUrl}{config.ApiEndpoints.Products.List}?page=1&pageSize=20")
+                .WithHeader("Accept", "application/json");
             
-            return Response.Ok();
+            request.AddAuthenticationHeaders(config.Authentication);
+            
+            var response = await Http.Send(httpClient, request);
+            return response;
         })
         .WithoutWarmUp()
         .WithLoadSimulations(
@@ -39,21 +35,16 @@ public static class BaseScenarios
         
         return Scenario.Create(scenarioName, async context =>
         {
-            var step = await Step.Run("get_product_by_id", context, async () =>
-            {
-                var productId = TestDataGenerator.GetRandomProductId(config.TestData.SampleProductIds);
-                var endpoint = config.ApiEndpoints.Products.GetById.Replace("{id}", productId);
-                
-                var request = Http.CreateRequest("GET", $"{config.TestSettings.BaseUrl}{endpoint}")
-                    .WithHeader("Accept", "application/json");
-                
-                request.AddAuthenticationHeaders(config.Authentication);
-                
-                var response = await Http.Send(httpClient, request);
-                return response;
-            });
+            var productId = TestDataGenerator.GetRandomProductId(config.TestData.SampleProductIds);
+            var endpoint = config.ApiEndpoints.Products.GetById.Replace("{id}", productId);
             
-            return Response.Ok();
+            var request = Http.CreateRequest("GET", $"{config.TestSettings.BaseUrl}{endpoint}")
+                .WithHeader("Accept", "application/json");
+            
+            request.AddAuthenticationHeaders(config.Authentication);
+            
+            var response = await Http.Send(httpClient, request);
+            return response;
         })
         .WithoutWarmUp()
         .WithLoadSimulations(
@@ -67,22 +58,17 @@ public static class BaseScenarios
         
         return Scenario.Create(scenarioName, async context =>
         {
-            var step = await Step.Run("create_product", context, async () =>
-            {
-                var testProduct = TestDataGenerator.CreateTestProduct(config.TestData.CreateProductTemplate);
-                
-                var request = Http.CreateRequest("POST", $"{config.TestSettings.BaseUrl}{config.ApiEndpoints.Products.Create}")
-                    .WithHeader("Accept", "application/json")
-                    .WithHeader("Content-Type", "application/json")
-                    .WithJsonBody(testProduct);
-                
-                request.AddAuthenticationHeaders(config.Authentication);
-                
-                var response = await Http.Send(httpClient, request);
-                return response;
-            });
+            var testProduct = TestDataGenerator.CreateTestProduct(config.TestData.CreateProductTemplate);
             
-            return Response.Ok();
+            var request = Http.CreateRequest("POST", $"{config.TestSettings.BaseUrl}{config.ApiEndpoints.Products.Create}")
+                .WithHeader("Accept", "application/json")
+                .WithHeader("Content-Type", "application/json")
+                .WithBody(new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(testProduct), System.Text.Encoding.UTF8, "application/json"));
+            
+            request.AddAuthenticationHeaders(config.Authentication);
+            
+            var response = await Http.Send(httpClient, request);
+            return response;
         })
         .WithoutWarmUp()
         .WithLoadSimulations(
@@ -96,24 +82,19 @@ public static class BaseScenarios
         
         return Scenario.Create(scenarioName, async context =>
         {
-            var step = await Step.Run("update_product", context, async () =>
-            {
-                var productId = TestDataGenerator.GetRandomProductId(config.TestData.SampleProductIds);
-                var updateProduct = TestDataGenerator.CreateUpdateProduct(config.TestData.CreateProductTemplate);
-                var endpoint = config.ApiEndpoints.Products.Update.Replace("{id}", productId);
-                
-                var request = Http.CreateRequest("PUT", $"{config.TestSettings.BaseUrl}{endpoint}")
-                    .WithHeader("Accept", "application/json")
-                    .WithHeader("Content-Type", "application/json")
-                    .WithJsonBody(updateProduct);
-                
-                request.AddAuthenticationHeaders(config.Authentication);
-                
-                var response = await Http.Send(httpClient, request);
-                return response;
-            });
+            var productId = TestDataGenerator.GetRandomProductId(config.TestData.SampleProductIds);
+            var updateProduct = TestDataGenerator.CreateUpdateProduct(config.TestData.CreateProductTemplate);
+            var endpoint = config.ApiEndpoints.Products.Update.Replace("{id}", productId);
             
-            return Response.Ok();
+            var request = Http.CreateRequest("PUT", $"{config.TestSettings.BaseUrl}{endpoint}")
+                .WithHeader("Accept", "application/json")
+                .WithHeader("Content-Type", "application/json")
+                .WithBody(new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(updateProduct), System.Text.Encoding.UTF8, "application/json"));
+            
+            request.AddAuthenticationHeaders(config.Authentication);
+            
+            var response = await Http.Send(httpClient, request);
+            return response;
         })
         .WithoutWarmUp()
         .WithLoadSimulations(

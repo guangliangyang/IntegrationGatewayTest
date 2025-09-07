@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NBomber" Version="6.1.1" />
-    <PackageReference Include="NBomber.Http" Version="6.1.0" />
+    <PackageReference Include="NBomber" Version="4.1.2" />
+    <PackageReference Include="NBomber.Http" Version="4.1.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.7" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.7" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.7" />

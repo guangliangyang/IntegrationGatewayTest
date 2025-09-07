@@ -65,7 +65,7 @@ class Program
 
     private static void RunPerformanceTest(TestConfiguration config, string testMode)
     {
-        var scenarios = new List<Scenario>();
+        var scenarios = new List<ScenarioProps>();
         
         switch (testMode)
         {
@@ -115,23 +115,22 @@ class Program
             .RegisterScenarios(scenarios.ToArray())
             .WithReportFolder(config.TestSettings.ReportOutputPath)
             .WithReportFileName($"performance-test-{testMode}-{DateTime.Now:yyyy-MM-dd-HH-mm}")
-            .WithReportFormats(ReportFormat.Html, ReportFormat.Csv, ReportFormat.Txt)
             .Run();
             
         Console.WriteLine("✅ Performance test completed!");
         Console.WriteLine($"📊 Reports saved to: {config.TestSettings.ReportOutputPath}");
     }
 
-    private static IEnumerable<Scenario> CreateSmokeTestScenarios(TestConfiguration config)
+    private static IEnumerable<ScenarioProps> CreateSmokeTestScenarios(TestConfiguration config)
     {
         yield return BaseScenarios.CreateGetProductsScenario(config)
-            .WithLoadSimulations(Simulation.InjectPerSec(rate: 1, during: TimeSpan.FromMinutes(1)));
+            .WithLoadSimulations(Simulation.Inject(rate: 1, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromMinutes(1)));
             
         yield return BaseScenarios.CreateGetProductByIdScenario(config)
-            .WithLoadSimulations(Simulation.InjectPerSec(rate: 1, during: TimeSpan.FromMinutes(1)));
+            .WithLoadSimulations(Simulation.Inject(rate: 1, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromMinutes(1)));
     }
 
-    private static IEnumerable<Scenario> CreateLightLoadScenarios(TestConfiguration config)
+    private static IEnumerable<ScenarioProps> CreateLightLoadScenarios(TestConfiguration config)
     {
         yield return BaseScenarios.CreateGetProductsScenario(config)
             .WithLoadSimulations(Simulation.KeepConstant(copies: 5, during: TimeSpan.FromMinutes(5)));
@@ -143,7 +142,7 @@ class Program
             .WithLoadSimulations(Simulation.KeepConstant(copies: 2, during: TimeSpan.FromMinutes(5)));
     }
 
-    private static IEnumerable<Scenario> CreateMediumLoadScenarios(TestConfiguration config)
+    private static IEnumerable<ScenarioProps> CreateMediumLoadScenarios(TestConfiguration config)
     {
         yield return BaseScenarios.CreateGetProductsScenario(config)
             .WithLoadSimulations(Simulation.KeepConstant(copies: 25, during: TimeSpan.FromMinutes(10)));
@@ -158,7 +157,7 @@ class Program
             .WithLoadSimulations(Simulation.KeepConstant(copies: 5, during: TimeSpan.FromMinutes(10)));
     }
 
-    private static IEnumerable<Scenario> CreateHeavyLoadScenarios(TestConfiguration config)
+    private static IEnumerable<ScenarioProps> CreateHeavyLoadScenarios(TestConfiguration config)
     {
         yield return BaseScenarios.CreateGetProductsScenario(config)
             .WithLoadSimulations(Simulation.KeepConstant(copies: 50, during: TimeSpan.FromMinutes(15)));
@@ -173,7 +172,7 @@ class Program
             .WithLoadSimulations(Simulation.KeepConstant(copies: 10, during: TimeSpan.FromMinutes(15)));
     }
 
-    private static IEnumerable<Scenario> CreateStressTestScenarios(TestConfiguration config)
+    private static IEnumerable<ScenarioProps> CreateStressTestScenarios(TestConfiguration config)
     {
         // 逐步增加负载的压力测试
         yield return BaseScenarios.CreateGetProductsScenario(config)
@@ -185,7 +184,7 @@ class Program
             );
     }
 
-    private static IEnumerable<Scenario> CreateCacheTestScenarios(TestConfiguration config)
+    private static IEnumerable<ScenarioProps> CreateCacheTestScenarios(TestConfiguration config)
     {
         yield return ProductsApiScenarios.CreateCacheTestScenario(config)
             .WithLoadSimulations(Simulation.KeepConstant(copies: 10, during: TimeSpan.FromMinutes(10)));
@@ -194,7 +193,7 @@ class Program
             .WithLoadSimulations(Simulation.KeepConstant(copies: 8, during: TimeSpan.FromMinutes(10)));
     }
 
-    private static IEnumerable<Scenario> CreateMixedWorkloadScenarios(TestConfiguration config)
+    private static IEnumerable<ScenarioProps> CreateMixedWorkloadScenarios(TestConfiguration config)
     {
         yield return ProductsApiScenarios.CreateMixedWorkloadScenario(config)
             .WithLoadSimulations(Simulation.KeepConstant(copies: 50, during: TimeSpan.FromMinutes(15)));
