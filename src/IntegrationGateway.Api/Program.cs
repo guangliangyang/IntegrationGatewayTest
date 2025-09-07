@@ -33,6 +33,7 @@ builder.AddApplicationInsights();
 builder.AddConfigurationValidation();
 
 // Add security configuration
+var securityOptions = builder.Configuration.GetSection(SecurityOptions.SectionName).Get<SecurityOptions>();
 builder.Services.Configure<SecurityOptions>(builder.Configuration.GetSection(SecurityOptions.SectionName));
 
 // Add configuration
@@ -91,7 +92,6 @@ builder.Services.ConfigureSwagger();
 builder.Services.AddHealthChecks();
 
 // Configure request size limits
-var securityOptions = builder.Configuration.GetSection(SecurityOptions.SectionName).Get<SecurityOptions>();
 var requestLimits = securityOptions?.RequestLimits ?? new RequestLimitsOptions();
 
 builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
