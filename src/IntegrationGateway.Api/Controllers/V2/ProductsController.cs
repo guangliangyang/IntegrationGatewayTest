@@ -12,8 +12,7 @@ namespace IntegrationGateway.Api.Controllers.V2;
 /// Inherits from V1 and overrides methods to return V2 format responses
 /// </summary>
 [ApiController]
-[Route("api/v2/[controller]")]
-[ApiVersion("2.0")]
+[Route("api/v2/[controller]")] 
 [Produces("application/json")]
 public class ProductsController : V1.ProductsController
 {

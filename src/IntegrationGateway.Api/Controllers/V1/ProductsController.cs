@@ -9,7 +9,6 @@ namespace IntegrationGateway.Api.Controllers.V1;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-[ApiVersion("1.0")]
 [Produces("application/json")]
 public class ProductsController : ControllerBase
 {
